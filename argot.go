@@ -40,6 +40,34 @@ func (ss Steps) Go(t *testing.T) (results Steps, err error) {
 	return results, nil
 }
 
+// Use a chan to indicate the steps to carry out rather than a
+// slice. The advantage of a chan is that it allows more laziness:
+// steps can even be responsible for issuing their own subsequent
+// steps.
+type StepsChan <-chan Step
+
+// t can be nil. If t is not nil and an error occurs, then t.Fatal
+// will be called. The steps returned represent the steps that were
+// executed, including the step that errored, if an error occurred.
+func (sc StepsChan) Go(t *testing.T) (results Steps, err error) {
+	if t != nil {
+		defer func() {
+			if err != nil {
+				t.Fatalf("Achieved Steps: %v; Error: %v", results, err)
+			}
+		}()
+	}
+	results = make([]Step, 0, 16)
+	for step := range sc {
+		results = append(results, step)
+		err = step.Go()
+		if err != nil {
+			return results, err
+		}
+	}
+	return results, nil
+}
+
 type StepFunc func() error
 
 func (sf StepFunc) Go() error {
