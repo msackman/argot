@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/xeipuuv/gojsonschema"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -17,6 +18,9 @@ type Step interface {
 
 type Steps []Step
 
+// t can be nil. If t is not nil and an error occurs, then t.Fatal
+// will be called. The steps returned represent the steps that were
+// executed, including the step that errored, if an error occurred.
 func (ss Steps) Go(t *testing.T) (results Steps, err error) {
 	if t != nil {
 		defer func() {
@@ -49,6 +53,7 @@ type HttpCall struct {
 	ResponseBody []byte
 }
 
+// client can be nil. If it is nil, a new http.Client is used.
 func NewHttpCall(client *http.Client) *HttpCall {
 	if client == nil {
 		client = new(http.Client)
@@ -95,6 +100,7 @@ func (hc *HttpCall) EnsureResponse() error {
 	}
 }
 
+// Idempotent.
 func (hc *HttpCall) ReceiveBody() error {
 	if err := hc.EnsureResponse(); err != nil {
 		return err
@@ -112,6 +118,8 @@ func (hc *HttpCall) ReceiveBody() error {
 	}
 }
 
+// Idempotent. You should ensure this is called at the end of life for
+// each HttpCall. It drains bodies and generally sweeps up the mess.
 func (hc *HttpCall) Reset() error {
 	hc.Request = nil
 	if hc.Response != nil && hc.ResponseBody == nil {
@@ -123,6 +131,8 @@ func (hc *HttpCall) Reset() error {
 	return nil
 }
 
+// This will automatically call HttpCall.Reset to ensure it's safe to
+// create a new request.
 func NewRequest(hc *HttpCall, method, urlStr string, body io.Reader) Step {
 	return StepFunc(func() error {
 		if err := hc.Reset(); err != nil {
@@ -203,6 +213,28 @@ func ResponseBodyContains(hc *HttpCall, value string) Step {
 			return fmt.Errorf("Body: Expected '%s'; found '%s'.", value, string(hc.ResponseBody))
 		} else {
 			return nil
+		}
+	})
+}
+
+func ResponseBodyJSONSchema(hc *HttpCall, schema string) Step {
+	return StepFunc(func() error {
+		if err := hc.ReceiveBody(); err != nil {
+			return err
+		} else {
+			schemaLoader := gojsonschema.NewStringLoader(schema)
+			bodyLoader := gojsonschema.NewStringLoader(string(hc.ResponseBody))
+			if result, err := gojsonschema.Validate(schemaLoader, bodyLoader); err != nil {
+				return err
+			} else if !result.Valid() {
+				msg := "Validation failure:\n"
+				for _, err := range result.Errors() {
+					msg += fmt.Sprintf("\t%v\n", err)
+				}
+				return errors.New(msg[:len(msg)-1])
+			} else {
+				return nil
+			}
 		}
 	})
 }
