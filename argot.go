@@ -74,6 +74,22 @@ func (sf StepFunc) Go() error {
 	return sf()
 }
 
+type NamedStep struct {
+	StepFunc
+	name string
+}
+
+func (ns NamedStep) String() string {
+	return ns.name
+}
+
+func NewNamedStep(name string, step StepFunc) *NamedStep {
+	return &NamedStep{
+		StepFunc: step,
+		name:     name,
+	}
+}
+
 type HttpCall struct {
 	Client       *http.Client
 	Request      *http.Request
@@ -162,7 +178,7 @@ func (hc *HttpCall) Reset() error {
 // This will automatically call HttpCall.Reset to ensure it's safe to
 // create a new request.
 func NewRequest(hc *HttpCall, method, urlStr string, body io.Reader) Step {
-	return StepFunc(func() error {
+	return NewNamedStep("NewRequest", func() error {
 		if err := hc.Reset(); err != nil {
 			return err
 		} else if req, err := http.NewRequest(method, urlStr, body); err != nil {
@@ -175,7 +191,7 @@ func NewRequest(hc *HttpCall, method, urlStr string, body io.Reader) Step {
 }
 
 func RequestHeader(hc *HttpCall, key, value string) Step {
-	return StepFunc(func() error {
+	return NewNamedStep("RequestHeader", func() error {
 		if err := AnyError(hc.AssertRequest(), hc.AssertNoRespose()); err != nil {
 			return err
 		} else {
@@ -186,7 +202,7 @@ func RequestHeader(hc *HttpCall, key, value string) Step {
 }
 
 func ResponseStatusEquals(hc *HttpCall, status int) Step {
-	return StepFunc(func() error {
+	return NewNamedStep("ResponseStatusEquals", func() error {
 		if err := hc.EnsureResponse(); err != nil {
 			return err
 		} else if hc.Response.StatusCode != status {
@@ -198,7 +214,7 @@ func ResponseStatusEquals(hc *HttpCall, status int) Step {
 }
 
 func ResponseHeaderEquals(hc *HttpCall, key, value string) Step {
-	return StepFunc(func() error {
+	return NewNamedStep("ResponseHeaderEquals", func() error {
 		if err := hc.EnsureResponse(); err != nil {
 			return err
 		} else if header := hc.Response.Header.Get(key); header != value {
@@ -210,7 +226,7 @@ func ResponseHeaderEquals(hc *HttpCall, key, value string) Step {
 }
 
 func ResponseHeaderContains(hc *HttpCall, key, value string) Step {
-	return StepFunc(func() error {
+	return NewNamedStep("ResponseHeaderContains", func() error {
 		if err := hc.EnsureResponse(); err != nil {
 			return err
 		} else if header := hc.Response.Header.Get(key); !strings.Contains(header, value) {
@@ -222,7 +238,7 @@ func ResponseHeaderContains(hc *HttpCall, key, value string) Step {
 }
 
 func ResponseBodyEquals(hc *HttpCall, value string) Step {
-	return StepFunc(func() error {
+	return NewNamedStep("ResponseBodyEquals", func() error {
 		if err := hc.ReceiveBody(); err != nil {
 			return err
 		} else if string(hc.ResponseBody) != value {
@@ -234,7 +250,7 @@ func ResponseBodyEquals(hc *HttpCall, value string) Step {
 }
 
 func ResponseBodyContains(hc *HttpCall, value string) Step {
-	return StepFunc(func() error {
+	return NewNamedStep("ResponseBodyContains", func() error {
 		if err := hc.ReceiveBody(); err != nil {
 			return err
 		} else if !strings.Contains(string(hc.ResponseBody), value) {
@@ -246,7 +262,7 @@ func ResponseBodyContains(hc *HttpCall, value string) Step {
 }
 
 func ResponseBodyJSONSchema(hc *HttpCall, schema string) Step {
-	return StepFunc(func() error {
+	return NewNamedStep("ResponseBodyJSONSchema", func() error {
 		if err := hc.ReceiveBody(); err != nil {
 			return err
 		} else {
