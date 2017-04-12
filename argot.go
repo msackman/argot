@@ -169,8 +169,8 @@ func (hc *HttpCall) Reset() error {
 	if hc.Response != nil && hc.ResponseBody == nil {
 		io.Copy(ioutil.Discard, hc.Response.Body)
 		hc.Response.Body.Close()
-		hc.Response = nil
 	}
+	hc.Response = nil
 	hc.ResponseBody = nil
 	return nil
 }
