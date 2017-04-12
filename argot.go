@@ -201,6 +201,10 @@ func (hc *HttpCall) RequestHeader(key, value string) Step {
 	})
 }
 
+func (hc *HttpCall) Call() Step {
+	return NewNamedStep("Call", hc.EnsureResponse)
+}
+
 func (hc *HttpCall) ResponseStatusEquals(status int) Step {
 	return NewNamedStep("ResponseStatusEquals", func() error {
 		if err := hc.EnsureResponse(); err != nil {
