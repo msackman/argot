@@ -178,7 +178,7 @@ func (hc *HttpCall) Reset() error {
 // This will automatically call HttpCall.Reset to ensure it's safe to
 // create a new request.
 func (hc *HttpCall) NewRequest(method, urlStr string, body io.Reader) Step {
-	return NewNamedStep("NewRequest", func() error {
+	return NewNamedStep(fmt.Sprintf("NewRequest(%s: %s)", method, urlStr), func() error {
 		if err := hc.Reset(); err != nil {
 			return err
 		} else if req, err := http.NewRequest(method, urlStr, body); err != nil {
@@ -191,7 +191,7 @@ func (hc *HttpCall) NewRequest(method, urlStr string, body io.Reader) Step {
 }
 
 func (hc *HttpCall) RequestHeader(key, value string) Step {
-	return NewNamedStep("RequestHeader", func() error {
+	return NewNamedStep(fmt.Sprintf("RequestHeader(%s: %s)", key, value), func() error {
 		if err := AnyError(hc.AssertRequest(), hc.AssertNoRespose()); err != nil {
 			return err
 		} else {
@@ -206,7 +206,7 @@ func (hc *HttpCall) Call() Step {
 }
 
 func (hc *HttpCall) ResponseStatusEquals(status int) Step {
-	return NewNamedStep("ResponseStatusEquals", func() error {
+	return NewNamedStep(fmt.Sprintf("ResponseStatusEquals(%d)", status), func() error {
 		if err := hc.EnsureResponse(); err != nil {
 			return err
 		} else if hc.Response.StatusCode != status {
@@ -218,7 +218,7 @@ func (hc *HttpCall) ResponseStatusEquals(status int) Step {
 }
 
 func (hc *HttpCall) ResponseHeaderEquals(key, value string) Step {
-	return NewNamedStep("ResponseHeaderEquals", func() error {
+	return NewNamedStep(fmt.Sprintf("ResponseHeaderEquals(%s: %s)", key, value), func() error {
 		if err := hc.EnsureResponse(); err != nil {
 			return err
 		} else if header := hc.Response.Header.Get(key); header != value {
@@ -230,7 +230,7 @@ func (hc *HttpCall) ResponseHeaderEquals(key, value string) Step {
 }
 
 func (hc *HttpCall) ResponseHeaderContains(key, value string) Step {
-	return NewNamedStep("ResponseHeaderContains", func() error {
+	return NewNamedStep(fmt.Sprintf("ResponseHeaderContains(%s: %s)", key, value), func() error {
 		if err := hc.EnsureResponse(); err != nil {
 			return err
 		} else if header := hc.Response.Header.Get(key); !strings.Contains(header, value) {
