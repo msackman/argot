@@ -242,7 +242,7 @@ func (hc *HttpCall) ResponseBodyContains(value string) Step {
 
 // ResponseBodyJSONSchema is a Step that when executed ensures there
 // is a non-nil hc.ResponseBody and errors unless the hc.ResponseBody
-// can be validated agains the schema parameter using gojsonschema.
+// can be validated against the schema parameter using gojsonschema.
 func (hc *HttpCall) ResponseBodyJSONSchema(schema string) Step {
 	return NewNamedStep("ResponseBodyJSONSchema", func() error {
 		if err := hc.ReceiveBody(); err != nil {
