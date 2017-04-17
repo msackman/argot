@@ -178,6 +178,36 @@ func (hc *HttpCall) ResponseStatusEquals(status int) Step {
 	})
 }
 
+// ResponseHeaderExists is a Step that when executed ensures there is
+// a non-nil hc.Response and errors unless hc.Response.Header[key]
+// exists. It says nothing about the value of the header.
+func (hc *HttpCall) ResponseHeaderExists(key string) Step {
+	return NewNamedStep(fmt.Sprintf("ResponseHeaderExists(%s)", key), func() error {
+		if err := hc.EnsureResponse(); err != nil {
+			return err
+		} else if _, found := hc.Response.Header[key]; !found {
+			return fmt.Errorf("Header '%s' not found.", key)
+		} else {
+			return nil
+		}
+	})
+}
+
+// ResponseHeaderNotExists is a Step that when executed ensures there
+// is a non-nil hc.Response and errors unless hc.Response.Header[key]
+// does not exist.
+func (hc *HttpCall) ResponseHeaderNotExists(key string) Step {
+	return NewNamedStep(fmt.Sprintf("ResponseHeaderNotExists(%s)", key), func() error {
+		if err := hc.EnsureResponse(); err != nil {
+			return err
+		} else if _, found := hc.Response.Header[key]; found {
+			return fmt.Errorf("Header '%s' found.", key)
+		} else {
+			return nil
+		}
+	})
+}
+
 // ResponseHeaderEquals is a Step that when executed ensures there is
 // a non-nil hc.Response and errors unless the
 // hc.Response.Header.Get(key) equals the value parameter. Note this
