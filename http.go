@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/xeipuuv/gojsonschema"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
+
+	"github.com/xeipuuv/gojsonschema"
 )
 
 // HttpCall captures all the state relating to a single HTTP call. It
@@ -267,6 +269,24 @@ func (hc *HttpCall) ResponseBodyContains(value string) Step {
 		} else {
 			return nil
 		}
+	})
+}
+
+// ResponseBodyMatches is a Step that when executed ensures there is
+// a non-nil hc.ResponseBody and errors unless the hc.ResponseBody
+// matches the regular expression parameter.
+func (hc *HttpCall) ResponseBodyMatches(pattern string) Step {
+	return NewNamedStep("ResponseBodyMatches", func() error {
+		var validBody = regexp.MustCompile(pattern)
+		if err := hc.ReceiveBody(); err != nil {
+			return err
+		}
+		body := hc.ResponseBody
+		matched := validBody.MatchString(string(body))
+		if !matched {
+			return fmt.Errorf("wanted body to match the pattern '%s' but got '%s'", pattern, body)
+		}
+		return nil
 	})
 }
 
