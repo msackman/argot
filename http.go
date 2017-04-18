@@ -284,7 +284,7 @@ func (hc *HttpCall) ResponseBodyMatches(pattern string) Step {
 		body := hc.ResponseBody
 		matched := validBody.MatchString(string(body))
 		if !matched {
-			return fmt.Errorf("wanted body to match the pattern '%s' but got '%s'", pattern, body)
+			return fmt.Errorf("Body: Expected to match the pattern '%s'; found '%s'.", pattern, body)
 		}
 		return nil
 	})
