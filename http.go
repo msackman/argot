@@ -276,11 +276,11 @@ func (hc *HttpCall) ResponseBodyContains(value string) Step {
 // a non-nil hc.ResponseBody and errors unless the hc.ResponseBody
 // matches the regular expression parameter.
 func (hc *HttpCall) ResponseBodyMatches(pattern *regexp.Regexp) Step {
-	return NewNamedStep(fmt.Sprintf("ResponseBodyMatches(%s)", pattern), func() error {
+	return NewNamedStep(fmt.Sprintf("ResponseBodyMatches(%v)", pattern), func() error {
 		if err := hc.ReceiveBody(); err != nil {
 			return err
 		} else if !pattern.MatchString(string(hc.ResponseBody)) {
-			return fmt.Errorf("Body: Expected to match the pattern '%s'; found '%s'.", pattern, string(hc.ResponseBody))
+			return fmt.Errorf("Body: Expected to match the pattern '%v'; found '%s'.", pattern, string(hc.ResponseBody))
 		}
 		return nil
 	})
