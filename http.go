@@ -281,8 +281,9 @@ func (hc *HttpCall) ResponseBodyMatches(pattern *regexp.Regexp) Step {
 			return err
 		} else if !pattern.MatchString(string(hc.ResponseBody)) {
 			return fmt.Errorf("Body: Expected to match the pattern '%v'; found '%s'.", pattern, string(hc.ResponseBody))
+		} else {
+			return nil
 		}
-		return nil
 	})
 }
 
