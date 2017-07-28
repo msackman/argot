@@ -22,7 +22,11 @@ func (ss Steps) Test(t *testing.T) (results Steps, err error) {
 	if t != nil {
 		defer func() {
 			if err != nil {
-				t.Fatalf("Achieved Steps: %v; Error: %v", results, err)
+				t.Log("Achieved Steps:")
+				for _, result := range results {
+					t.Logf("  %v", result)
+				}
+				t.Fatalf("Error: %v", err)
 			}
 		}()
 	}
@@ -51,7 +55,11 @@ func (sc StepsChan) Test(t *testing.T) (results Steps, err error) {
 	if t != nil {
 		defer func() {
 			if err != nil {
-				t.Fatalf("Achieved Steps: %v; Error: %v", results, err)
+				t.Log("Achieved Steps:")
+				for _, result := range results {
+					t.Logf("  %v", result)
+				}
+				t.Fatalf("Error: %v", err)
 			}
 		}()
 	}
