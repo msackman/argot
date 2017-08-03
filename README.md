@@ -55,6 +55,12 @@ the steps failed:
 
     % go test
     --- FAIL: Testify (0.24s)
-            test.go:20: Achieved Steps: [NewRequest(POST: https://...) RequestHeader(Content-Type: application/json) ResponseStatusEquals(200) ResponseHeaderEquals(Content-Type: application/json)
-    ResponseHeaderNotExists(Magical-Response) ResponseHeaderNotExists(No-Unicorns)]; Error: nope
+            test.go:20: Achieved Steps:
+                   [NewRequest(POST: https://...)
+                    RequestHeader(Content-Type: application/json)
+                    ResponseStatusEquals(200)
+                    ResponseHeaderEquals(Content-Type: application/json)
+                    ResponseHeaderNotExists(Magical-Response)
+                    ResponseHeaderNotExists(No-Unicorns)]
+                   Error: nope
     FAIL
