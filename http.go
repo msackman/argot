@@ -229,7 +229,7 @@ func (hc *HttpCall) ResponseHeaderEquals(key, value string) Step {
 		if err := hc.EnsureResponse(); err != nil {
 			return err
 		} else if header := hc.Response.Header.Get(key); header != value {
-			return fmt.Errorf("Header: '%s': Differed: '%s'.", key, diff(value, header))
+			return fmt.Errorf("Header: '%s': Diff: '%s'.", key, diff(value, header))
 		} else {
 			return nil
 		}
@@ -259,8 +259,8 @@ func (hc *HttpCall) ResponseBodyEquals(value string) Step {
 	return NewNamedStep("ResponseBodyEquals", func() error {
 		if err := hc.ReceiveBody(); err != nil {
 			return err
-		} else if got := string(hc.ResponseBody); got != value {
-			return fmt.Errorf("Body: Differed: '%s'.", diff(value, got))
+		} else if bodyStr := string(hc.ResponseBody); bodyStr != value {
+			return fmt.Errorf("Body: Diff: '%s'.", diff(value, bodyStr))
 		} else {
 			return nil
 		}
