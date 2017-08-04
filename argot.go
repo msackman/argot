@@ -1,7 +1,11 @@
 package argot
 
 import (
+	"fmt"
+	"reflect"
 	"testing"
+
+	"github.com/kylelemons/godebug/pretty"
 )
 
 // Step represents a step in a test.
@@ -13,6 +17,22 @@ type Step interface {
 // representing the order of Steps in a larger unit.
 type Steps []Step
 
+var (
+	defaultConfig = &pretty.Config{
+		Formatter: map[reflect.Type]interface{}{
+			reflect.TypeOf((*Step)(nil)).Elem(): fmt.Sprint,
+		},
+	}
+)
+
+func formatFatalSteps(results Steps, err error) string {
+	msg := ""
+	if len(results) > 0 {
+		msg = "Achieved Steps:\n" + defaultConfig.Sprint(results) + "\n"
+	}
+	return fmt.Sprintf("%vError: %v", msg, err)
+}
+
 // Test runs the steps in order and returns either all the steps, or
 // all the steps that did not error, plus the step that errored. Thus
 // the results are always a prefix of the Steps.  t can be nil. If t
@@ -22,7 +42,7 @@ func (ss Steps) Test(t *testing.T) (results Steps, err error) {
 	if t != nil {
 		defer func() {
 			if err != nil {
-				t.Fatalf("Achieved Steps: %v; Error: %v", results, err)
+				t.Fatalf(formatFatalSteps(results, err))
 			}
 		}()
 	}
@@ -51,7 +71,7 @@ func (sc StepsChan) Test(t *testing.T) (results Steps, err error) {
 	if t != nil {
 		defer func() {
 			if err != nil {
-				t.Fatalf("Achieved Steps: %v; Error: %v", results, err)
+				t.Fatalf(formatFatalSteps(results, err))
 			}
 		}()
 	}
