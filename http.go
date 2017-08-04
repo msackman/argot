@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/xeipuuv/gojsonschema"
 )
 
@@ -210,6 +211,15 @@ func (hc *HttpCall) ResponseHeaderNotExists(key string) Step {
 	})
 }
 
+// Diff two strings, output as coloured string, the expected parts will
+// be removed/red if they're missing, the found/inserted parts will be
+// green if present, if the parts are the same, no colour is applied.
+func diff(expected string, got string) string {
+	dmp := diffmatchpatch.New()
+	diffs := dmp.DiffMain(expected, got, false)
+	return dmp.DiffPrettyText(diffs)
+}
+
 // ResponseHeaderEquals is a Step that when executed ensures there is
 // a non-nil hc.Response and errors unless the
 // hc.Response.Header.Get(key) equals the value parameter. Note this
@@ -219,7 +229,7 @@ func (hc *HttpCall) ResponseHeaderEquals(key, value string) Step {
 		if err := hc.EnsureResponse(); err != nil {
 			return err
 		} else if header := hc.Response.Header.Get(key); header != value {
-			return fmt.Errorf("Header '%s': Expected '%s'; found '%s'.", key, value, header)
+			return fmt.Errorf("Header: '%s': Diff: '%s'.", key, diff(value, header))
 		} else {
 			return nil
 		}
@@ -249,8 +259,8 @@ func (hc *HttpCall) ResponseBodyEquals(value string) Step {
 	return NewNamedStep("ResponseBodyEquals", func() error {
 		if err := hc.ReceiveBody(); err != nil {
 			return err
-		} else if string(hc.ResponseBody) != value {
-			return fmt.Errorf("Body: Expected '%s'; found '%s'.", value, string(hc.ResponseBody))
+		} else if bodyStr := string(hc.ResponseBody); bodyStr != value {
+			return fmt.Errorf("Body: Diff: '%s'.", diff(value, bodyStr))
 		} else {
 			return nil
 		}
