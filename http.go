@@ -2,14 +2,17 @@ package argot
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 	"regexp"
 	"strings"
 
+	"github.com/kylelemons/godebug/pretty"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/xeipuuv/gojsonschema"
 )
@@ -318,6 +321,28 @@ func (hc *HttpCall) ResponseBodyJSONSchema(schema string) Step {
 			} else {
 				return nil
 			}
+		}
+	})
+}
+
+// ResponseBodyJSONMatchesStruct is a Step that when executed ensures
+// there is a non-nil hc.ResponseBody, parses it as JSON (via
+// encoding/json) based on the type of the expected structure and errors
+// unless it is equal to the expected value, as validated by the pretty
+// package.  The error will contain a structured diff output with a
+// plus/"+" marking the values that were expected and a minus/"-"
+// marking the values that were actually present.
+func (hc *HttpCall) ResponseBodyJSONMatchesStruct(expected interface{}) Step {
+	return NewNamedStep("ResponseBodyJSONMatchesStruct", func() error {
+		parseAs := reflect.New(reflect.TypeOf(expected)).Interface()
+		if err := hc.ReceiveBody(); err != nil {
+			return err
+		} else if err := json.Unmarshal(hc.ResponseBody, parseAs); err != nil {
+			return err
+		} else if diff := pretty.Compare(parseAs, expected); diff != "" {
+			return fmt.Errorf("Did not match expected value: (-got +want)\n%s", diff)
+		} else {
+			return nil
 		}
 	})
 }
