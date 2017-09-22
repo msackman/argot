@@ -46,6 +46,17 @@ func (ss Steps) Test(t *testing.T) (results Steps, err error) {
 			}
 		}()
 	}
+	results, err = ss.run()
+	return
+}
+
+func (ss Steps) Go() error {
+	_, err := ss.run()
+	return err
+}
+
+func (ss Steps) run() (Steps, error) {
+	var err error
 	for idx, step := range ss {
 		err = step.Go()
 		if err != nil {
@@ -53,37 +64,6 @@ func (ss Steps) Test(t *testing.T) (results Steps, err error) {
 		}
 	}
 	return ss, nil
-}
-
-// Steps are useful, but there are times where you don't know ahead of
-// time exactly which Steps you wish to run. Consider a test where the
-// steps are dependent on the response you receive from a server.
-// Thus the advantage of using a chan is that it allows more laziness:
-// steps can be responsible for issuing their own subsequent steps.
-type StepsChan <-chan Step
-
-// Test runs the steps in order and returns either all the steps, or
-// all the steps that did not error, plus the step that errored. Thus
-// the results are always a prefix of the Steps.  t can be nil. If t
-// is not nil and an error occurs, then t.Fatal will be called. If an
-// error occurs, it will be returned.
-func (sc StepsChan) Test(t *testing.T) (results Steps, err error) {
-	if t != nil {
-		defer func() {
-			if err != nil {
-				t.Fatalf(formatFatalSteps(results, err))
-			}
-		}()
-	}
-	results = make([]Step, 0, 16)
-	for step := range sc {
-		results = append(results, step)
-		err = step.Go()
-		if err != nil {
-			return results, err
-		}
-	}
-	return results, nil
 }
 
 // StepFunc is the basic type of a Step: a function that takes no
