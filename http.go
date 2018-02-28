@@ -82,7 +82,9 @@ func (hc *HttpCall) EnsureResponse() error {
 	} else if hc.Request == nil {
 		return errors.New("Cannot ensure response: no request.")
 	} else if response, err := hc.Client.Do(hc.Request); err != nil {
-		return fmt.Errorf("Error when making call of %v: %v", hc.Request, err)
+		safeURL := *hc.Request.URL
+		safeURL.User = nil
+		return fmt.Errorf("Error when making call of %v: %v", safeURL, err)
 	} else {
 		hc.Response = response
 		return nil
