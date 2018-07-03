@@ -27,8 +27,12 @@ var (
 
 func formatFatalSteps(results Steps, err error) string {
 	msg := ""
-	if len(results) > 0 {
-		msg = "Achieved Steps:\n" + defaultConfig.Sprint(results) + "\n"
+	l := len(results)
+	if l > 1 {
+		msg = "Achieved Steps:\n" + defaultConfig.Sprint(results[:l-1]) + "\n"
+	}
+	if l > 0 {
+		msg = msg + "Failed Step:\n" + defaultConfig.Sprint(&results[l-1]) + "\n"
 	}
 	return fmt.Sprintf("%vError: %v", msg, err)
 }
@@ -60,7 +64,7 @@ func (ss Steps) run() (Steps, error) {
 	for idx, step := range ss {
 		err = step.Go()
 		if err != nil {
-			return ss[:idx], err
+			return ss[:idx+1], err
 		}
 	}
 	return ss, nil
