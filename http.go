@@ -193,7 +193,7 @@ func (hc *HttpCall) ResponseHeaderExists(key string) Step {
 	return NewNamedStep(fmt.Sprintf("ResponseHeaderExists(%s)", key), func() error {
 		if err := hc.EnsureResponse(); err != nil {
 			return err
-		} else if _, found := hc.Response.Header[key]; !found {
+		} else if _, found := hc.Response.Header[http.CanonicalHeaderKey(key)]; !found {
 			return fmt.Errorf("Header '%s' not found.", key)
 		} else {
 			return nil
@@ -342,7 +342,7 @@ func (hc *HttpCall) ResponseBodyJSONMatchesStruct(expected interface{}) Step {
 		} else if err := json.Unmarshal(hc.ResponseBody, parseAs); err != nil {
 			return err
 		} else if diff := pretty.Compare(parseAs, expected); diff != "" {
-			return fmt.Errorf("Did not match expected value: (-got +want)\n%s", diff)
+			return fmt.Errorf("Did not match expected value: (-have +want)\n%s", diff)
 		} else {
 			return nil
 		}
