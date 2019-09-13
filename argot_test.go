@@ -23,69 +23,69 @@ func TestStepsSatisftyStep(t *testing.T) {
 }
 
 func TestThatNilWorks(t *testing.T) {
-	Steps([]Step{
+	Steps{
 		ExpectNil(nil),
 		ExpectError(ExpectNil(42)),
-	}).Test(t)
+	}.Test(t)
 }
 
 func TestThatDeepEqualWorks(t *testing.T) {
-	Steps([]Step{
+	Steps{
 		ExpectDeepEqual("a", "a"),
 		ExpectError(ExpectDeepEqual("a", "b")),
-	}).Test(t)
+	}.Test(t)
 }
 
 func TestThatDiffWorks(t *testing.T) {
-	Steps([]Step{
+	Steps{
 		ExpectDiffEqual("a", "a"),
 		ExpectError(ExpectDeepEqual("a", "b")),
-		ExpectDiffEqual(ExpectDeepEqual("a", "b").Go().Error(), `Expected "a" (string), got "b" (string)`),
-	}).Test(t)
+		ExpectDiffEqual(ExpectDeepEqual("a", "b").Go().Error(), `Expected "b" (string), got "a" (string)`),
+	}.Test(t)
 }
 
 func TestThatPrettyWorks(t *testing.T) {
-	Steps([]Step{
+	Steps{
 		ExpectPrettyEqual("a", "a"),
 		ExpectError(ExpectPrettyEqual("a", "b")),
 		ExpectPrettyEqual(ExpectPrettyEqual("a", "b").Go().Error(), `Expected equal values, got diff: (-have +want)
 -"a"
 +"b"`),
-	}).Test(t)
+	}.Test(t)
 }
 
 func TestThatDeferredWorks(t *testing.T) {
 	var a string
 
-	Steps([]Step{
+	Steps{
 		StepFunc(func() error {
 			a = "foo"
 			return nil
 		}),
-		NewStepProducer(func() Step {
+		StepProducer(func() Step {
 			return ExpectDiffEqual(a, "foo")
 		}),
-	}).Test(t)
+	}.Test(t)
 }
 
 func TestThatAssertRequestWorks(t *testing.T) {
 	hc := NewHttpCall(nil)
 
-	Steps([]Step{
+	Steps{
 		ExpectNil(hc.AssertNoRequest()),
 		ExpectError(ExpectNil(hc.AssertRequest())),
-	}).Test(t)
+	}.Test(t)
 }
 
 func TestThatRequestWorks(t *testing.T) {
 	hc := NewHttpCall(nil)
 
-	Steps([]Step{
+	Steps{
 		hc.NewRequest("GET", "http://localhost:8000/", nil),
-		NewStepProducer(func() Step {
+		StepProducer(func() Step {
 			return ExpectNil(hc.AssertRequest())
 		}),
-	}).Test(t)
+	}.Test(t)
 }
 
 type Sample struct {
@@ -110,10 +110,10 @@ func TestThatCallWorks(t *testing.T) {
 
 	hc := NewHttpCall(nil)
 
-	Steps([]Step{
+	Steps{
 		hc.NewRequest("GET", ts.URL, nil),
 		hc.Call(),
-		NewStepProducer(func() Step {
+		StepProducer(func() Step {
 			return ExpectError(ExpectNil(hc.ResponseBody))
 		}),
 		hc.ResponseStatusEquals(http.StatusForbidden),
@@ -135,5 +135,5 @@ func TestThatCallWorks(t *testing.T) {
 		hc.ResponseBodyJSONMatchesStruct(Sample{
 			Foo: 42,
 		}),
-	}).Test(t)
+	}.Test(t)
 }

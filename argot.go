@@ -111,30 +111,13 @@ func AnyError(errs ...error) error {
 }
 
 // StepProducer is for when some of the arguments of a Step need to be
-// delayed: returns a new Step when executed.  The supplied function will only
-// ever be executed once.
-type StepProducer struct {
-	producer func() Step
-	step Step
-}
+// delayed: returns a new Step when executed.
+type StepProducer func() Step
 
-func NewStepProducer(producer func() Step) StepProducer {
-	return StepProducer{
-		producer,
-		nil,
-	}
+func (sp StepProducer) Go() error {
+	return sp().Go()
 }
 
 func (sp StepProducer) String() string {
-	if sp.step == nil {
-		sp.step = sp.producer()
-	}
-	return fmt.Sprintf("%v", sp.step)
-}
-
-func (sp StepProducer) Go() error {
-	if sp.step == nil {
-		sp.step = sp.producer()
-	}
-	return sp.step.Go()
+	return fmt.Sprintf("%v", sp())
 }

@@ -1,6 +1,7 @@
 package argot
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -23,7 +24,7 @@ func ExpectNil(actual interface{}) *NamedStep {
 func ExpectDeepEqual(actual interface{}, expected interface{}) *NamedStep {
 	return NewNamedStep("ExpectDeepEqual", func() error {
 		if !reflect.DeepEqual(actual, expected) {
-			return fmt.Errorf("Expected %#[1]v (%[1]T), got %#[2]v (%[2]T)", actual, expected)
+			return fmt.Errorf("Expected %#v (%T), got %#v (%T)", expected, expected, actual, actual)
 		}
 		return nil
 	})
@@ -33,7 +34,7 @@ func ExpectDeepEqual(actual interface{}, expected interface{}) *NamedStep {
 func ExpectError(step Step) *NamedStep {
 	return NewNamedStep(fmt.Sprintf("ExpectError(%v)", step), func() error {
 		if step.Go() == nil {
-			return fmt.Errorf("Expected error from step, got %#v", nil)
+			return errors.New("Expected error from step, got nil")
 		}
 		return nil
 	})
